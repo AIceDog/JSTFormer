@@ -1,0 +1,1 @@
+First, you need to download YOLOv3 and HRNet pretrained models here and put it in the './demo/lib/checkpoint' directory. Then, you need to put your in-the-wild videos in the './demo/video/' directory.
