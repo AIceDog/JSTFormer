@@ -1,7 +1,7 @@
 # JSTFormer
-the source code of paper "3d Pose Estimation with Joint Group Spatial-Temporal Transformer".
+the source code of thesis "3d Pose Estimation with Joint Group Spatial-Temporal Transformer".
 
-It was used with python and Pytorch.
+This neural network takes 2d pose sequence as input and output corresponding 3d pose sequence.
 
 
 These are the predicted video output:
