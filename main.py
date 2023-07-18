@@ -58,7 +58,6 @@ def step(split, opt, actions, dataLoader, model, optimizer=None, epoch=None):
         if out_target.size(1) > 1:
             out_target_single = out_target[:, opt.pad].unsqueeze(1) # out_target_single.shape : [B, 1, J, 3]
             gt_3D_single = gt_3D[:, opt.pad].unsqueeze(1) 
-            # out_target = out_target[:, ::3, :, :] # 我加的
         else:
             out_target_single = out_target
             gt_3D_single = gt_3D
@@ -74,17 +73,16 @@ def step(split, opt, actions, dataLoader, model, optimizer=None, epoch=None):
             optimizer.step()
 
         elif split == 'test':
-            # output_3D = output_3D[:, 40].unsqueeze(1)
             output_3D = output_3D[:, opt.pad].unsqueeze(1)
             output_3D[:, :, 0, :] = 0 
-            action_error_sum = test_calculation(output_3D, out_target, action, action_error_sum, opt.dataset, subject) # only test center frame why?
-            action_error_sum_refine = test_calculation(output_3D_refine, out_target, action, action_error_sum, opt.dataset, subject) # 我加的
+            action_error_sum = test_calculation(output_3D, out_target, action, action_error_sum, opt.dataset, subject) 
+            action_error_sum_refine = test_calculation(output_3D_refine, out_target, action, action_error_sum, opt.dataset, subject) 
 
     if split == 'train':
         return loss_all['loss'].avg
     elif split == 'test':
         p1, p2 = print_error(opt.dataset, action_error_sum, opt.train)
-        p1_refine, p2_refine = print_error(opt.dataset, action_error_sum_refine, opt.train) # 我加的
+        p1_refine, p2_refine = print_error(opt.dataset, action_error_sum_refine, opt.train)
 
         return p1, p2, p1_refine, p2_refine
 
@@ -154,23 +152,21 @@ if __name__ == '__main__':
     model = torch.nn.DataParallel(model, device_ids=[0, 1, 2, 3, 4])
   
 
-    epoch_start = 0 # 需要加载的参数
-    lr = opt.lr # 需要加载的参数
+    epoch_start = 0 
+    lr = opt.lr 
     all_param = []
     all_param += list(model.parameters())
-    optimizer = optim.AdamW(all_param, lr=opt.lr, weight_decay=0.1) # 我加的
+    optimizer = optim.AdamW(all_param, lr=opt.lr, weight_decay=0.1) 
 
     
     if opt.resume != '':  # for resuming 
-        # model_path必须亲手指定
         model_paths = sorted(glob.glob(os.path.join('checkpoint', opt.resume, '_______.pth'))) # model_paths : checkpoint/0328_0252_48_243/_______.pth
 
-        ###############################################
         checkpoint = torch.load(model_path)
         model.load_state_dict(checkpoint['model'])
-        optimizer.load_state_dict(checkpoint['optimizer']) # 需要更新
+        optimizer.load_state_dict(checkpoint['optimizer']) 
         epoch_start = checkpoint['epoch'] + 1
-        lr = checkpoint['lr'] # 需要更新
+        lr = checkpoint['lr']
         train_generator_random_state = checkpoint['random_state']
         opt.previous_best_threshold = checkpoint['previous_best_threshold']
         opt.previous_name = checkpoint['previous_name']
@@ -213,11 +209,11 @@ if __name__ == '__main__':
         if opt.train: 
             loss = train(opt, actions, train_dataloader, model, optimizer, epoch)
         
-        p1, p2, p1_refine, p2_refine = val(opt, actions, test_dataloader, model) # 我改了
+        p1, p2, p1_refine, p2_refine = val(opt, actions, test_dataloader, model)
 
         if opt.train == 0:
             print('p1: %.2f, p2: %.2f' % (p1, p2))
-            print('p1_refine: %.2f, p2_refine: %.2f' % (p1_refine, p2_refine)) # 我加的
+            print('p1_refine: %.2f, p2_refine: %.2f' % (p1_refine, p2_refine)) 
             break
         else:
             logging.info('epoch: %d, lr: %.7f, loss: %.4f, p1: %.2f, p2: %.2f' % (epoch, lr, loss, p1, p2))
@@ -225,35 +221,33 @@ if __name__ == '__main__':
             print('e: %d, lr: %.7f, loss: %.4f, p1: %.2f, p2: %.2f' % (epoch, lr, loss, p1, p2))
             print('p1_refine: %.2f, p2_refine: %.2f' % (p1_refine, p2_refine))
         
-        if opt.train: # 我改了顺序
-            generator_random_state = train_data.get_generator_random_state() # 我加的
+        if opt.train: 
+            generator_random_state = train_data.get_generator_random_state() 
             save_model_epoch(opt.checkpoint, #  opt.checkpoint : checkpoint/0328_0252_48_243
-                             epoch, # this epoch
+                             epoch, # this current epoch
                              model, 
-                             lr=lr, # 我加的 lr of this epoch
-                             train_generator_random_state=generator_random_state, # 我加的 
+                             lr=lr, 
+                             train_generator_random_state=generator_random_state, 
                              optimizer=optimizer, # 我加的 optimizer of this epoch
-                             previous_best_threshold = opt.previous_best_threshold, # 我加的 
-                             previous_name = opt.previous_name # 我加的
+                             previous_best_threshold = opt.previous_best_threshold, 
+                             previous_name = opt.previous_name 
                             ) 
  
             if p1 < opt.previous_best_threshold:
-                generator_random_state = train_data.get_generator_random_state() # 我加的
+                generator_random_state = train_data.get_generator_random_state() 
                 opt.previous_name = save_model(opt.previous_name, 
                                                opt.checkpoint, 
-                                               epoch, # this epoch 
+                                               epoch, # this current epoch 
                                                p1, # best p1 
                                                model, 
-                                               lr=lr, # 我加的 lr of this epoch
-                                               train_generator_random_state=generator_random_state, # 我加的 
-                                               optimizer=optimizer) # 我加的 optimizer of this epoch
+                                               lr=lr,
+                                               train_generator_random_state=generator_random_state, 
+                                               optimizer=optimizer) 
                 opt.previous_best_threshold = p1
                 
-        ######################################### 我加的
         lr *= opt.lr_decay
         for param_group in optimizer.param_groups:
             param_group['lr'] *= opt.lr_decay
-        ######################################### 我加的
 
 
 
