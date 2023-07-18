@@ -5,8 +5,10 @@ It was used with python and Pytorch.
 
 These are the predicted video output:
 
-![image](https://github.com/AIceDog/JSTFormer/blob/master/figures/output_sample2.gif)
-![image](https://github.com/AIceDog/JSTFormer/blob/master/figures/output_sample3.gif)
+
+<img src="https://github.com/AIceDog/JSTFormer/blob/master/figures/output_sample2.gif" alt="image" width="600" height="300">
+
+<img src="https://github.com/AIceDog/JSTFormer/blob/master/figures/output_sample3.gif" alt="image" width="600" height="300">
 
 
 Acknowledge:
